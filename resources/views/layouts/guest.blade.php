@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        <title>{{ config('app.name', 'TRAVELISTA') }} - Welcome</title>
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+        <!-- Scripts -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
+        <style>
+            body { font-family: 'Outfit', sans-serif; }
+        </style>
+    </head>
+    <body class="font-sans text-gray-900 antialiased">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 gradient-bg">
+            <div data-aos="fade-up">
+                <a href="/">
+                    <span class="text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">TRAVELISTA</span>
+                </a>
+            </div>
+
+            <div class="w-full sm:max-w-md mt-8 px-8 py-10 glass shadow-2xl overflow-hidden sm:rounded-3xl" data-aos="zoom-in" data-aos-delay="100">
+                {{ $slot }}
+            </div>
+        </div>
+    </body>
+</html>
