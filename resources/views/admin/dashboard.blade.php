@@ -7,23 +7,23 @@
                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2">Overseeing Indian Tourism Operations</p>
             </div>
             <div class="flex space-x-4">
-                <a href="{{ route('admin.bookings.index') }}" class="btn-luxury py-3 px-6 text-xs bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white">Manage Bookings</a>
-                <button class="btn-luxury py-3 px-6 text-xs bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white">Download Report</button>
+                <x-luxury-button href="{{ route('admin.bookings.index') }}" class="py-3 px-6 text-xs text-center !bg-gradient-to-r !from-emerald-600/50 !to-emerald-500/50 hover:!from-emerald-600 hover:!to-emerald-500">Manage Bookings</x-luxury-button>
+                <x-luxury-button as="button" class="py-3 px-6 text-xs text-center !bg-gradient-to-r !from-blue-600/50 !to-blue-500/50 hover:!from-blue-600 hover:!to-blue-500">Download Report</x-luxury-button>
             </div>
         </div>
 
         <!-- Comprehensive Analytics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <!-- Revenue -->
-            <div class="glass p-8 rounded-[3rem] border-white/5 relative overflow-hidden group hover:border-blue-600/30 transition-all duration-500" data-aos="fade-up" data-aos-delay="0">
+            <x-luxury-card class="group hover:border-blue-600/30" data-aos="fade-up" data-aos-delay="0">
                 <div class="w-12 h-12 bg-blue-600/20 rounded-2xl flex items-center justify-center mb-6 text-blue-500 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total Revenue</p>
                 <h3 class="text-3xl font-black text-white tracking-tighter">₹{{ number_format($stats['total_revenue']) }}</h3>
-            </div>
+            </x-luxury-card>
             <!-- Users -->
-            <div class="glass p-8 rounded-[3rem] border-white/5 relative overflow-hidden group hover:border-emerald-600/30 transition-all duration-500" data-aos="fade-up" data-aos-delay="100">
+            <x-luxury-card class="group hover:border-emerald-600/30" data-aos="fade-up" data-aos-delay="100">
                 <div class="w-12 h-12 bg-emerald-600/20 rounded-2xl flex items-center justify-center mb-6 text-emerald-500 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </div>
@@ -36,9 +36,9 @@
                         <p class="text-[9px] font-bold text-emerald-400">+{{ $stats['recent_users'] }} this week</p>
                     </div>
                 </div>
-            </div>
+            </x-luxury-card>
             <!-- Bookings -->
-            <div class="glass p-8 rounded-[3rem] border-white/5 relative overflow-hidden group hover:border-purple-600/30 transition-all duration-500" data-aos="fade-up" data-aos-delay="200">
+            <x-luxury-card class="group hover:border-purple-600/30" data-aos="fade-up" data-aos-delay="200">
                 <div class="w-12 h-12 bg-purple-600/20 rounded-2xl flex items-center justify-center mb-6 text-purple-500 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
@@ -51,9 +51,9 @@
                         <p class="text-[9px] font-bold text-emerald-400">{{ $stats['confirmed_bookings'] }} Confirmed</p>
                     </div>
                 </div>
-            </div>
+            </x-luxury-card>
             <!-- Pending -->
-            <div class="glass p-8 rounded-[3rem] border-white/5 relative overflow-hidden group hover:border-amber-600/30 transition-all duration-500" data-aos="fade-up" data-aos-delay="300">
+            <x-luxury-card class="group hover:border-amber-600/30" data-aos="fade-up" data-aos-delay="300">
                 <div class="w-12 h-12 bg-amber-600/20 rounded-2xl flex items-center justify-center mb-6 text-amber-500 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
@@ -63,7 +63,7 @@
                         <h3 class="text-3xl font-black text-white tracking-tighter">{{ number_format($stats['pending_bookings']) }}</h3>
                     </div>
                 </div>
-            </div>
+            </x-luxury-card>
         </div>
 
         <!-- Deep Analytics row -->
@@ -160,6 +160,59 @@
                 </div>
                 <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-slate-400">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Logs & Popularity -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div class="lg:col-span-2 glass p-10 rounded-[4rem] border-white/5" data-aos="fade-up">
+                <h3 class="text-2xl font-black text-white uppercase tracking-tighter mb-8">Admin <span class="text-blue-600 italic">Activity</span></h3>
+                <div class="space-y-4">
+                    @forelse($recentActivities as $activity)
+                        <div class="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <div>
+                                <p class="text-xs font-black text-white uppercase tracking-widest">{{ str_replace('_', ' ', $activity->action) }}</p>
+                                <p class="text-[10px] text-slate-500">{{ $activity->admin->name ?? 'Admin' }} • {{ $activity->created_at->diffForHumans() }}</p>
+                            </div>
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">#{{ $activity->id }}</span>
+                        </div>
+                    @empty
+                        <p class="text-slate-500">No recent activity yet.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="glass p-10 rounded-[4rem] border-white/5" data-aos="fade-up" data-aos-delay="100">
+                <h3 class="text-xl font-black text-white uppercase tracking-tighter mb-6">Trending <span class="text-emerald-500 italic">Demand</span></h3>
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Destinations</p>
+                        @foreach($topDestinations as $item)
+                            <div class="flex items-center justify-between text-xs text-white mb-2">
+                                <span>{{ $item->bookable->name ?? 'Destination' }}</span>
+                                <span class="text-emerald-400 font-black">{{ $item->total }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Packages</p>
+                        @foreach($topPackages as $item)
+                            <div class="flex items-center justify-between text-xs text-white mb-2">
+                                <span>{{ $item->bookable->name ?? 'Package' }}</span>
+                                <span class="text-blue-400 font-black">{{ $item->total }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Hotels</p>
+                        @foreach($topHotels as $item)
+                            <div class="flex items-center justify-between text-xs text-white mb-2">
+                                <span>{{ $item->bookable->name ?? 'Hotel' }}</span>
+                                <span class="text-amber-400 font-black">{{ $item->total }}</span>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>

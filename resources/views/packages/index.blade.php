@@ -60,7 +60,7 @@
                 <!-- Package Grid -->
                 <main class="w-full lg:w-3/4 space-y-12">
                     @forelse($packages as $package)
-                    <div class="glass group rounded-[2.5rem] overflow-hidden border-white/5 transition-all duration-700 hover:border-emerald-600/30 flex flex-col md:flex-row min-h-[280px]" data-aos="fade-up">
+                    <a href="{{ route('packages.show', $package->slug) }}" class="block glass group rounded-[2.5rem] overflow-hidden border-white/5 transition-all duration-700 hover:border-emerald-600/30 flex flex-col md:flex-row min-h-[280px]" data-aos="fade-up">
                         <div class="w-full md:w-2/5 relative overflow-hidden h-64 md:h-auto">
                             <img src="{{ $package->image_url }}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="{{ $package->name }}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=1000'">
                             <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-transparent to-transparent hidden md:block"></div>
@@ -79,10 +79,10 @@
                                     <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Investment</p>
                                     <p class="text-xl font-black text-white tracking-tighter">₹{{ number_format($package->price) }} <span class="text-[9px] text-slate-500 uppercase font-bold">/ pp</span></p>
                                 </div>
-                                <a href="{{ route('packages.show', $package->slug) }}" class="btn-luxury px-8 py-3 !bg-white/5 border-white/10 hover:!bg-emerald-600 text-[9px] shadow-lg">Reserve</a>
+                                <span class="btn-luxury px-8 py-3 !bg-white/5 border-white/10 group-hover:!bg-emerald-600 text-[9px] shadow-lg inline-block">Reserve</span>
                             </div>
                         </div>
-                    </div>
+                    </a>
                     @empty
                     <div class="text-center py-24">
                         <p class="text-2xl text-slate-500 font-bold">No packages found matching your criteria.</p>

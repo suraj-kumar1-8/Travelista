@@ -8,7 +8,7 @@
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-8" data-aos="fade-up">
                     <div>
                         <div class="flex space-x-1 mb-6">
-                            @for($i=0; $i<$hotel->star_rating; $i++)
+                            @for($i=0; $i<$hotel->rating; $i++)
                                 <svg class="w-5 h-5 text-yellow-500 fill-current shadow-[0_0_10px_#eab308]" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
                             @endfor
                         </div>
@@ -92,7 +92,12 @@
                 <div class="sticky top-32 glass p-10 rounded-[3.5rem] border border-blue-600/20 shadow-2xl shadow-blue-600/10" data-aos="fade-left">
                     <div class="flex items-center justify-between mb-10">
                         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Daily Rate</p>
-                        <p class="text-5xl font-black text-white tracking-tighter">${{ number_format($hotel->price_per_night) }}<span class="text-xs text-slate-500 tracking-normal ml-1">/night</span></p>
+                        <p class="text-5xl font-black text-white tracking-tighter">₹{{ number_format($hotel->price_per_night) }}<span class="text-xs text-slate-500 tracking-normal ml-1">/night</span></p>
+                    </div>
+                    <div class="glass p-4 rounded-2xl border-white/5 mb-8">
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Availability</p>
+                        <p class="text-lg font-black text-white">{{ $hotel->available_rooms }} rooms left</p>
+                        <p class="text-[10px] text-slate-500">Capacity: {{ $hotel->total_rooms }} rooms</p>
                     </div>
 
                             <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm" class="space-y-8" x-data="hotelBooking({{ $hotel->price_per_night }})">
@@ -113,26 +118,56 @@
                                 </div>
                                 <div class="space-y-3 mb-8">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Travelers</label>
-                                    <input type="number" name="travelers" x-model="travelers" required min="1" max="10" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold">
+                                    <input type="number" name="travelers" x-model="travelers" @input="calculateNights(); validateCoupon();" required min="1" max="10" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold">
                                 </div>
+
+                                <div class="space-y-3 mb-8">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Coupon Code</label>
+                                    <div class="relative">
+                                        <input type="text" name="coupon_code" x-model="couponCode" @input.debounce.500ms="validateCoupon" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold uppercase" placeholder="SUMMER25">
+                                        <button type="button" @click="validateCoupon" class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 rounded-xl transition-colors" x-text="isValidatingCoupon ? '...' : 'Apply'"></button>
+                                    </div>
+                                    <p x-show="couponMessage" :class="couponValid ? 'text-emerald-500' : 'text-rose-500'" class="text-[10px] font-bold px-2 mt-2 uppercase tracking-widest" x-text="couponMessage" style="display: none;"></p>
+                                </div>
+
+                                @if($hotel->roomCategories->count())
+                                <div class="space-y-3 mb-8">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Room Category</label>
+                                    <select name="room_category_id" @change="price = parseFloat($event.target.selectedOptions[0].dataset.rate)" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold">
+                                        @foreach($hotel->roomCategories as $category)
+                                            <option value="{{ $category->id }}" data-rate="{{ $category->price_per_night }}">
+                                                {{ $category->name }} - ₹{{ number_format($category->price_per_night) }} ({{ $category->rooms_available }} left)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
 
                                 <!-- Dynamic Price Summary -->
                                 <div class="glass p-6 rounded-2xl border-white/5 space-y-4 mb-8">
                                     <div class="flex justify-between text-xs font-bold text-slate-400">
                                         <span>Rate per night</span>
-                                        <span class="text-white">₹{{ number_format($hotel->price_per_night) }}</span>
+                                        <span class="text-white" x-text="'₹' + price.toLocaleString('en-IN')"></span>
                                     </div>
                                     <div class="flex justify-between text-xs font-bold text-slate-400">
                                         <span>Nights</span>
                                         <span class="text-white" x-text="nights"></span>
                                     </div>
                                     <div class="flex justify-between text-xs font-bold text-slate-400">
-                                        <span>Travelers</span>
-                                        <span class="text-white" x-text="travelers"></span>
+                                        <span>Rooms Needed</span>
+                                        <span class="text-white" x-text="roomsNeeded"></span>
+                                    </div>
+                                    <div x-show="discountAmount > 0" class="flex justify-between text-xs font-bold text-emerald-400">
+                                        <span>Discount</span>
+                                        <span x-text="'-₹' + discountAmount.toLocaleString('en-IN')"></span>
+                                    </div>
+                                    <div class="flex justify-between text-xs font-bold text-slate-400">
+                                        <span>Taxes (18%)</span>
+                                        <span class="text-white" x-text="'₹' + taxAmount.toLocaleString('en-IN')"></span>
                                     </div>
                                     <div class="border-t border-white/10 pt-4 flex justify-between">
                                         <span class="text-sm font-black text-white uppercase tracking-widest">Total</span>
-                                        <span class="text-2xl font-black text-blue-500" x-text="'₹' + (price * nights * travelers).toLocaleString('en-IN')"></span>
+                                        <span class="text-2xl font-black text-blue-500" x-text="'₹' + grandTotal.toLocaleString('en-IN')"></span>
                                     </div>
                                 </div>
 
@@ -141,6 +176,7 @@
                                     <span>Reserve Your Stay</span>
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                 </button>
+                                <button onclick="toggleWishlist('Hotel', {{ $hotel->id }}, this)" type="button" class="btn-luxury w-full py-4 text-[10px] !bg-white/5 hover:!bg-rose-600 mt-4">Add to Favorites</button>
                                 @else
                                 <a href="{{ route('login') }}" class="btn-luxury w-full py-6 text-sm flex items-center justify-center space-x-3">
                                     <span>Login to Reserve</span>
@@ -155,12 +191,18 @@
 
             <script>
                 document.addEventListener('alpine:init', () => {
-                    Alpine.data('hotelBooking', (price) => ({
+                                        Alpine.data('hotelBooking', (price) => ({
                         price: price,
                         travelers: 1,
                         startDate: '',
                         endDate: '',
                         nights: 1,
+                        couponCode: '',
+                        discountAmount: 0,
+                        isValidatingCoupon: false,
+                        couponMessage: '',
+                        couponValid: false,
+                        
                         calculateNights() {
                             if (this.startDate && this.endDate) {
                                 const start = new Date(this.startDate);
@@ -168,7 +210,67 @@
                                 const diffTime = Math.abs(end - start);
                                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                                 this.nights = diffDays > 0 ? diffDays : 1;
+                                this.validateCoupon();
                             }
+                        },
+                        
+                        get roomsNeeded() {
+                            return Math.max(1, Math.ceil(this.travelers / 2));
+                        },
+                        get baseTotal() {
+                            return this.price * this.nights * this.roomsNeeded;
+                        },
+                        get subtotal() {
+                            return Math.max(0, this.baseTotal - this.discountAmount);
+                        },
+                        get taxAmount() {
+                            return this.subtotal * 0.18;
+                        },
+                        get grandTotal() {
+                            return this.subtotal + this.taxAmount;
+                        },
+                        
+                        validateCoupon() {
+                            if(!this.couponCode) {
+                                this.discountAmount = 0;
+                                this.couponMessage = '';
+                                this.couponValid = false;
+                                return;
+                            }
+                            
+                            this.isValidatingCoupon = true;
+                            this.couponMessage = 'Validating...';
+                            
+                            fetch('/coupons/validate', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    code: this.couponCode,
+                                    amount: this.baseTotal
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                this.isValidatingCoupon = false;
+                                if(data.valid) {
+                                    this.discountAmount = data.discount;
+                                    this.couponValid = true;
+                                    this.couponMessage = data.message;
+                                } else {
+                                    this.discountAmount = 0;
+                                    this.couponValid = false;
+                                    this.couponMessage = data.message;
+                                }
+                            })
+                            .catch(error => {
+                                this.isValidatingCoupon = false;
+                                this.discountAmount = 0;
+                                this.couponValid = false;
+                                this.couponMessage = 'Error validating coupon';
+                            });
                         }
                     }))
                 })
@@ -183,4 +285,24 @@
             animation: slow-zoom 20s ease-in-out infinite alternate;
         }
     </style>
+        @auth
+        <script>
+            function toggleWishlist(type, id, btn) {
+                fetch("{{ route('wishlist.toggle') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ wishable_type: type, wishable_id: id })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (btn) {
+                        btn.textContent = data.status === 'added' ? 'Remove from Favorites' : 'Add to Favorites';
+                    }
+                });
+            }
+        </script>
+        @endauth
 </x-app-layout>

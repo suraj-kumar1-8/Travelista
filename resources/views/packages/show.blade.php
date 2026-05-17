@@ -124,7 +124,77 @@
                             <h3 class="text-5xl font-black text-white tracking-tighter">₹{{ number_format($package->price) }} <span class="text-lg text-slate-500 uppercase tracking-widest">/ pp</span></h3>
                         </div>
 
-                        <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm" class="space-y-8" x-data="{ travelers: 1, price: {{ $package->price }} }">
+                        <div class="glass p-6 rounded-2xl border-white/5 mb-8">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Seats Available</p>
+                            <p class="text-2xl font-black text-white">{{ $package->available_seats }}</p>
+                            <p class="text-[10px] text-slate-500">Capacity: {{ $package->total_seats }}</p>
+                        </div>
+
+                                                <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm" class="space-y-8" 
+                            x-data="{ 
+                                travelers: 1, 
+                                price: {{ $package->price }},
+                                couponCode: '',
+                                discountAmount: 0,
+                                taxes: 0,
+                                isValidatingCoupon: false,
+                                couponMessage: '',
+                                couponValid: false,
+                                
+                                get subtotal() {
+                                    return Math.max(0, (this.travelers * this.price) - this.discountAmount);
+                                },
+                                get taxAmount() {
+                                    return this.subtotal * 0.18;
+                                },
+                                get grandTotal() {
+                                    return this.subtotal + this.taxAmount;
+                                },
+                                
+                                validateCoupon() {
+                                    if(!this.couponCode) {
+                                        this.discountAmount = 0;
+                                        this.couponMessage = '';
+                                        this.couponValid = false;
+                                        return;
+                                    }
+                                    
+                                    this.isValidatingCoupon = true;
+                                    this.couponMessage = 'Validating...';
+                                    
+                                    fetch('{{ route('coupons.validate') }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({
+                                            code: this.couponCode,
+                                            amount: this.travelers * this.price
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        this.isValidatingCoupon = false;
+                                        if(data.valid) {
+                                            this.discountAmount = data.discount;
+                                            this.couponValid = true;
+                                            this.couponMessage = data.message;
+                                        } else {
+                                            this.discountAmount = 0;
+                                            this.couponValid = false;
+                                            this.couponMessage = data.message;
+                                        }
+                                    })
+                                    .catch(error => {
+                                        this.isValidatingCoupon = false;
+                                        this.discountAmount = 0;
+                                        this.couponValid = false;
+                                        this.couponMessage = 'Error validating coupon';
+                                    });
+                                }
+                            }"
+                            x-init="$watch('travelers', value => { if(couponCode) validateCoupon(); })">
                             @csrf
                             <input type="hidden" name="bookable_type" value="TourPackage">
                             <input type="hidden" name="bookable_id" value="{{ $package->id }}">
@@ -147,19 +217,35 @@
                                 </div>
                             </div>
 
+                            <div class="space-y-4">
+                                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Coupon Code</label>
+                                <div class="relative">
+                                    <input type="text" name="coupon_code" x-model="couponCode" @change="validateCoupon" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold" placeholder="TRAVEL20">
+                                    <button type="button" @click="validateCoupon" class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 rounded-xl transition-colors" x-text="isValidatingCoupon ? '...' : 'Apply'"></button>
+                                </div>
+                                <p x-show="couponMessage" :class="couponValid ? 'text-emerald-500' : 'text-rose-500'" class="text-xs font-bold px-2" x-text="couponMessage" style="display: none;"></p>
+                            </div>
+
                             <!-- Dynamic Price Summary -->
                             <div class="glass p-6 rounded-2xl border-white/5 space-y-4">
                                 <div class="flex justify-between text-xs font-bold text-slate-400">
-                                    <span>Price per person</span>
-                                    <span class="text-white">₹{{ number_format($package->price) }}</span>
+                                    <span>Base Package <span x-text="'(x'+travelers+')'"></span></span>
+                                    <span class="text-white" x-text="'₹' + (travelers * price).toLocaleString('en-IN')"></span>
                                 </div>
+                                
+                                <div x-show="discountAmount > 0" style="display: none;" class="flex justify-between text-xs font-bold text-emerald-400">
+                                    <span>Coupon Discount</span>
+                                    <span x-text="'-₹' + discountAmount.toLocaleString('en-IN')"></span>
+                                </div>
+
                                 <div class="flex justify-between text-xs font-bold text-slate-400">
-                                    <span>Travelers</span>
-                                    <span class="text-white" x-text="travelers"></span>
+                                    <span>Taxes (18%)</span>
+                                    <span class="text-white" x-text="'₹' + taxAmount.toLocaleString('en-IN')"></span>
                                 </div>
+
                                 <div class="border-t border-white/10 pt-4 flex justify-between">
                                     <span class="text-sm font-black text-white uppercase tracking-widest">Total</span>
-                                    <span class="text-2xl font-black text-emerald-500" x-text="'₹' + (travelers * price).toLocaleString('en-IN')"></span>
+                                    <span class="text-2xl font-black text-emerald-500" x-text="'₹' + grandTotal.toLocaleString('en-IN')"></span>
                                 </div>
                             </div>
 
@@ -182,6 +268,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                             <span>Add to Wishlist</span>
                         </button>
+
                         @endauth
                     </div>
                 </div>

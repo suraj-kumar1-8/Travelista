@@ -30,4 +30,11 @@ class Notification extends Model
     {
         return $query->whereNull('read_at');
     }
+
+    public function markAsRead()
+    {
+        if (is_null($this->read_at)) {
+            $this->forceFill(['read_at' => $this->freshTimestamp()])->save();
+        }
+    }
 }

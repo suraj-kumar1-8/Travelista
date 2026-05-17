@@ -116,9 +116,16 @@
                     Date: {{ \Carbon\Carbon::parse($booking->start_date)->format('M d, Y') }}
                 </td>
                 <td class="text-right">
-                    INR {{ number_format($booking->total_price, 2) }}
+                    INR {{ number_format($booking->subtotal ?? $booking->total_price, 2) }}
                 </td>
             </tr>
+
+            @if($booking->discount_amount)
+            <tr class="item">
+                <td>Discount ({{ $booking->coupon_code ?? 'Promo' }})</td>
+                <td class="text-right">- INR {{ number_format($booking->discount_amount, 2) }}</td>
+            </tr>
+            @endif
 
             @if($booking->invoice)
             <tr class="item">
@@ -134,10 +141,27 @@
             <tr class="total">
                 <td></td>
                 <td class="text-right">
-                    Total: INR {{ number_format($booking->total_price, 2) }}
+                    Total: INR {{ number_format($booking->invoice->total_amount ?? $booking->total_price, 2) }}
                 </td>
             </tr>
         </table>
+
+        @if($booking->itineraries && $booking->itineraries->count())
+        <h3 style="margin-top: 30px;">Itinerary</h3>
+        <table cellpadding="0" cellspacing="0">
+            @foreach($booking->itineraries as $itinerary)
+            <tr class="item">
+                <td>
+                    <strong>Day {{ $itinerary->day_number }}:</strong> {{ $itinerary->title }}
+                    @if($itinerary->description)
+                        <div style="font-size: 12px; color: #666;">{{ $itinerary->description }}</div>
+                    @endif
+                </td>
+                <td class="text-right">Planned</td>
+            </tr>
+            @endforeach
+        </table>
+        @endif
         
         <p style="margin-top: 50px; font-size: 12px; color: #777; text-align: center;">
             Thank you for booking with Travelista. This is a computer generated invoice and requires no signature.

@@ -29,6 +29,14 @@
                 <option value="0" {{ !$offer->is_active ? 'selected' : '' }} class="bg-slate-900">Inactive</option>
             </select></div>
         </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div><label class="text-[10px] font-black text-slate-500 uppercase block mb-2 px-2">Banner Text</label><input type="text" name="banner_text" value="{{ $offer->banner_text }}" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white font-bold focus:ring-2 focus:ring-blue-600"></div>
+            <div><label class="text-[10px] font-black text-slate-500 uppercase block mb-2 px-2">Highlight Text</label><input type="text" name="highlight_text" value="{{ $offer->highlight_text }}" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white font-bold focus:ring-2 focus:ring-blue-600"></div>
+        </div>
+        <div>
+            <label class="text-[10px] font-black text-slate-500 uppercase block mb-2 px-2">Countdown Ends At</label>
+            <input type="datetime-local" name="countdown_ends_at" value="{{ $offer->countdown_ends_at ? $offer->countdown_ends_at->format('Y-m-d\TH:i') : '' }}" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white font-bold focus:ring-2 focus:ring-blue-600">
+        </div>
         <div><label class="text-[10px] font-black text-slate-500 uppercase block mb-2 px-2">Image URL</label><input type="url" name="image_url" value="{{ $offer->image_url }}" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white font-bold focus:ring-2 focus:ring-blue-600"></div>
         <div><label class="text-[10px] font-black text-slate-500 uppercase block mb-2 px-2">Description</label><textarea name="description" rows="3" required class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white font-bold focus:ring-2 focus:ring-blue-600">{{ $offer->description }}</textarea></div>
         <button type="submit" class="btn-luxury px-12 py-5">Update Offer</button>

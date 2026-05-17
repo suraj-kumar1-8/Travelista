@@ -6,7 +6,7 @@
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                 <div class="flex items-center space-x-8">
                     <div class="relative">
-                        <img src="https://ui-avatars.com/api/?name={{ Auth::user()->name }}&background=3b82f6&color=fff&size=256" class="w-24 h-24 rounded-[2rem] border-2 border-white/10 shadow-2xl" alt="">
+                        <img src="{{ Auth::user()->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=3b82f6&color=fff&size=256' }}" class="w-24 h-24 rounded-[2rem] border-2 border-white/10 shadow-2xl object-cover" alt="{{ Auth::user()->name }}">
                         <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white border-2 border-slate-950">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         </div>
@@ -49,6 +49,14 @@
             <div class="glass p-8 rounded-[3rem] border-white/5 hover:border-purple-600/30 transition-all duration-500" data-aos="fade-up" data-aos-delay="300">
                 <p class="text-slate-500 font-black uppercase tracking-widest text-[10px] mb-2">Wishlist Items</p>
                 <h3 class="text-4xl font-black text-white tracking-tighter">{{ $stats['wishlist_count'] }}</h3>
+            </div>
+            <div class="glass p-8 rounded-[3rem] border-white/5 hover:border-emerald-600/30 transition-all duration-500" data-aos="fade-up" data-aos-delay="400">
+                <p class="text-slate-500 font-black uppercase tracking-widest text-[10px] mb-2">Wallet Balance</p>
+                <h3 class="text-3xl font-black text-white tracking-tighter">₹{{ number_format(Auth::user()->wallet_balance ?? 0) }}</h3>
+            </div>
+            <div class="glass p-8 rounded-[3rem] border-white/5 hover:border-blue-600/30 transition-all duration-500" data-aos="fade-up" data-aos-delay="500">
+                <p class="text-slate-500 font-black uppercase tracking-widest text-[10px] mb-2">Reward Points</p>
+                <h3 class="text-3xl font-black text-white tracking-tighter">{{ number_format(Auth::user()->reward_points ?? 0) }}</h3>
             </div>
         </div>
 
@@ -182,6 +190,51 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Notifications & Recently Viewed -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div class="glass p-10 rounded-[3.5rem] border-white/5" data-aos="fade-up">
+                <h3 class="text-xl font-black text-white uppercase tracking-tighter mb-8">Latest <span class="text-blue-600 italic">Notifications</span></h3>
+                <div class="space-y-4">
+                    @forelse($recentNotifications as $notification)
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                            <p class="text-xs font-black text-white uppercase tracking-widest">{{ str_replace('_', ' ', $notification->type) }}</p>
+                            <p class="text-[10px] text-slate-500">{{ $notification->created_at->diffForHumans() }}</p>
+                        </div>
+                    @empty
+                        <p class="text-slate-500 text-sm">No notifications yet.</p>
+                    @endforelse
+                </div>
+                <a href="{{ route('notifications.index') }}" class="btn-luxury w-full mt-6 py-3 text-[10px]">View All Notifications</a>
+            </div>
+
+            <div class="glass p-10 rounded-[3.5rem] border-white/5" data-aos="fade-up" data-aos-delay="100">
+                <h3 class="text-xl font-black text-white uppercase tracking-tighter mb-8">Recently <span class="text-emerald-500 italic">Viewed</span></h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <p class="text-slate-500 text-sm">No recently viewed items yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Referrals & Wallet Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div class="glass p-10 rounded-[3.5rem] border-white/5" data-aos="fade-up">
+                <h3 class="text-xl font-black text-white uppercase tracking-tighter mb-8">Referral <span class="text-amber-500 italic">Rewards</span></h3>
+                <p class="text-xs text-slate-400 mb-4">Share your code to earn bonus points.</p>
+                <div class="glass p-6 rounded-2xl border-white/5 mb-6">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Your Code</p>
+                    <p class="text-2xl font-black text-white">{{ Auth::user()->referral_code ?? 'TRV-XXXXXX' }}</p>
+                </div>
+                <p class="text-xs text-slate-400">Total Referrals: <span class="text-white font-black">0</span></p>
+            </div>
+
+            <div class="glass p-10 rounded-[3.5rem] border-white/5" data-aos="fade-up" data-aos-delay="100">
+                <h3 class="text-xl font-black text-white uppercase tracking-tighter mb-8">Wallet <span class="text-emerald-500 italic">Activity</span></h3>
+                <div class="space-y-4">
+                    <p class="text-slate-500 text-sm">No wallet activity yet.</p>
+                </div>
             </div>
         </div>
 

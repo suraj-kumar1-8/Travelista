@@ -13,7 +13,8 @@ class TourPackage extends Model
 
     protected $fillable = [
         'name', 'slug', 'destination_id', 'description', 'duration_days',
-        'price', 'image_url', 'itinerary', 'inclusions', 'category', 'images', 'status'
+        'price', 'image_url', 'itinerary', 'inclusions', 'category', 'images', 'status',
+        'total_seats', 'available_seats'
     ];
 
     protected $casts = [

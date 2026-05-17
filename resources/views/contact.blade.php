@@ -67,26 +67,43 @@
                     <div class="glass p-10 lg:p-16 rounded-[3.5rem] border-white/5 relative overflow-hidden shadow-2xl">
                         <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-purple-600"></div>
                         
-                        <form class="space-y-8">
+                        @if(session('success'))
+                            <div class="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-sm font-bold text-center">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+
+                        @if(session('error'))
+                            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-sm font-bold text-center">
+                                {{ session('error') }}
+                            </div>
+                        @endif
+
+                        <form action="{{ route('contact.send') }}" method="POST" class="space-y-8">
+                            @csrf
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div class="space-y-2 group">
                                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2 group-focus-within:text-blue-500 transition-colors">Your Name</label>
-                                    <input type="text" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold placeholder-slate-600" placeholder="Alexander Graham">
+                                    <input type="text" name="name" value="{{ old('name') }}" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold placeholder-slate-600" placeholder="Alexander Graham" required>
+                                    @error('name')<span class="text-xs text-red-400 font-bold px-2">{{ $message }}</span>@enderror
                                 </div>
                                 <div class="space-y-2 group">
                                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2 group-focus-within:text-blue-500 transition-colors">Email Address</label>
-                                    <input type="email" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold placeholder-slate-600" placeholder="alex@premium.com">
+                                    <input type="email" name="email" value="{{ old('email') }}" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold placeholder-slate-600" placeholder="alex@premium.com" required>
+                                    @error('email')<span class="text-xs text-red-400 font-bold px-2">{{ $message }}</span>@enderror
                                 </div>
                             </div>
 
                             <div class="space-y-2 group">
                                 <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2 group-focus-within:text-blue-500 transition-colors">Subject</label>
-                                <input type="text" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold placeholder-slate-600" placeholder="Designing My Next Adventure">
+                                <input type="text" name="subject" value="{{ old('subject') }}" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold placeholder-slate-600" placeholder="Designing My Next Adventure">
+                                @error('subject')<span class="text-xs text-red-400 font-bold px-2">{{ $message }}</span>@enderror
                             </div>
 
                             <div class="space-y-2 group">
                                 <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2 group-focus-within:text-blue-500 transition-colors">Message</label>
-                                <textarea rows="5" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold placeholder-slate-600" placeholder="Tell us about your dream destination..."></textarea>
+                                <textarea name="message" rows="5" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold placeholder-slate-600" placeholder="Tell us about your dream destination..." required>{{ old('message') }}</textarea>
+                                @error('message')<span class="text-xs text-red-400 font-bold px-2">{{ $message }}</span>@enderror
                             </div>
 
                             <button type="submit" class="btn-luxury w-full py-5 text-sm shadow-lg shadow-blue-500/20">Send Inquiry</button>

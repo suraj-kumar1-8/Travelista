@@ -12,6 +12,11 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\TripPlannerController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\TravelPhotoController;
+use App\Http\Controllers\WeatherController;
 use App\Models\Offer;
 use Illuminate\Support\Facades\Route;
 
@@ -19,12 +24,29 @@ use Illuminate\Support\Facades\Route;
 Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
 Route::get('/search', [SearchController::class, 'results'])->name('search.results');
 
-// Home
+// Public Landing Page (Guest only, redirects to explore if authenticated)
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('home');
+    }
+    $destinations = \App\Models\Destination::where('status', 'active')->take(8)->get();
+    return view('landing', compact('destinations'));
+})->name('landing');
+
+// Explore Platform Page (Protected)
+Route::get('/explore', function () {
     $destinations = \App\Models\Destination::where('status', 'active')->latest()->take(6)->get();
     $offers = Offer::active()->take(3)->get();
-    return view('welcome', compact('destinations', 'offers'));
-})->name('home');
+    $trendingDestinations = \App\Models\Booking::select('bookable_id', 'bookable_type', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+        ->where('bookable_type', \App\Models\Destination::class)
+        ->groupBy('bookable_id', 'bookable_type')
+        ->orderByDesc('total')
+        ->with('bookable')
+        ->take(6)
+        ->get();
+
+    return view('welcome', compact('destinations', 'offers', 'trendingDestinations'));
+})->name('home')->middleware(['auth', 'verified']);
 
 // Destination Routes
 Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations.index');
@@ -41,6 +63,7 @@ Route::get('/hotels/{slug}', [HotelController::class, 'show'])->name('hotels.sho
 // Static Pages
 Route::get('/about', function () { return view('about'); })->name('about');
 Route::get('/contact', function () { return view('contact'); })->name('contact');
+Route::post('/contact-send', [\App\Http\Controllers\ContactController::class, 'send'])->name('contact.send');
 
 // Blog Routes (Public)
 Route::get('/blog', function () {
@@ -60,8 +83,19 @@ Route::get('/offers', function () {
     return view('offers.index', compact('offers'));
 })->name('offers.index');
 
+
+
+// Weather API
+Route::get('/weather', [WeatherController::class, 'show'])->name('weather.show');
+
 // User Dashboard & Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Trip Planner & Calculator (Protected)
+    Route::get('/trip-planner', [TripPlannerController::class, 'index'])->name('trip-planner.index');
+    Route::post('/trip-planner/suggest', [TripPlannerController::class, 'suggest'])->name('trip-planner.suggest');
+    Route::post('/trip-planner/store', [TripPlannerController::class, 'store'])->name('trip-planner.store');
+    Route::post('/trip-planner/calculate', [TripPlannerController::class, 'calculateExpense'])->name('trip-planner.calculate');
+
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $stats = [
@@ -76,7 +110,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $recentBookings = $user->bookings()->with(['bookable', 'invoice'])->latest()->take(5)->get();
         $upcomingTrips = $user->bookings()->with('bookable')->where('start_date', '>', now())->where('status', 'confirmed')->orderBy('start_date', 'asc')->take(3)->get();
         $offers = App\Models\Offer::active()->take(3)->get();
-        return view('dashboard', compact('stats', 'recentBookings', 'upcomingTrips', 'offers'));
+        $recentNotifications = $user->notifications()->latest()->take(5)->get();
+
+        return view('dashboard', compact(
+            'stats',
+            'recentBookings',
+            'upcomingTrips',
+            'offers',
+            'recentNotifications'
+        ));
     })->name('dashboard');
 
     // Profile
@@ -90,6 +132,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/bookings/{booking}/invoice', [BookingController::class, 'invoice'])->name('bookings.invoice');
     Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
     Route::post('/bookings/{booking}/pay', [BookingController::class, 'processPayment'])->name('bookings.pay');
+    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'requestCancellation'])->name('bookings.cancel');
 
     // Payments
     Route::post('/payments/verify', [PaymentController::class, 'verify'])->name('payments.verify');
@@ -106,6 +149,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Reviews
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/mark-all', [NotificationController::class, 'markAllRead'])->name('notifications.markAll');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+
+    // Support
+    Route::get('/support', [SupportTicketController::class, 'index'])->name('support.index');
+    Route::post('/support', [SupportTicketController::class, 'store'])->name('support.store');
+    Route::get('/support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');
+    Route::post('/support/{ticket}/reply', [SupportTicketController::class, 'reply'])->name('support.reply');
+
+    // Travel Photos
+    Route::get('/travel-photos', [TravelPhotoController::class, 'index'])->name('travel-photos.index');
+    Route::post('/travel-photos', [TravelPhotoController::class, 'store'])->name('travel-photos.store');
+    Route::delete('/travel-photos/{photo}', [TravelPhotoController::class, 'destroy'])->name('travel-photos.destroy');
+
+
+    // Coupons validation
+    Route::post('/coupons/validate', [CouponController::class, 'validateApi'])->name('coupons.validate');
 });
 
 // Admin Auth Routes
@@ -132,6 +195,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('blogs', BlogController::class);
     Route::resource('coupons', CouponController::class);
 
+    // Cancellation Management
+    Route::post('/bookings/{booking}/approve-cancellation', [BookingController::class, 'approveCancellation'])->name('bookings.approveCancellation');
+    Route::post('/bookings/{booking}/reject-cancellation', [BookingController::class, 'rejectCancellation'])->name('bookings.rejectCancellation');
+
+    // Support Tickets
+    Route::get('/support', [SupportTicketController::class, 'adminIndex'])->name('support.adminIndex');
+    Route::post('/support/{ticket}/status', [SupportTicketController::class, 'updateStatus'])->name('support.updateStatus');
+
     // Offers Management
     Route::get('/offers', [AdminController::class, 'offers'])->name('offers.index');
     Route::get('/offers/create', [AdminController::class, 'createOffer'])->name('offers.create');
@@ -140,5 +211,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/offers/{offer}', [AdminController::class, 'updateOffer'])->name('offers.update');
     Route::delete('/offers/{offer}', [AdminController::class, 'destroyOffer'])->name('offers.destroy');
 });
+
+use App\Http\Controllers\Auth\GoogleController;
+
+Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.login');
+Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 
 require __DIR__.'/auth.php';

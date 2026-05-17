@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\TourPackage;
 use App\Models\Destination;
+use App\Models\AdminActivityLog;
+use App\Models\RecentlyViewedItem;
+use App\Traits\NotifiesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PackageController extends Controller
 {
+    use NotifiesUsers;
     public function index(Request $request)
     {
         if ($request->is('admin/*')) {
@@ -98,7 +102,20 @@ class PackageController extends Controller
             }
         }
 
-        TourPackage::create($data);
+        $package = TourPackage::create($data);
+
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'package_created',
+            'subject_type' => TourPackage::class,
+            'subject_id' => $package->id,
+            'meta' => ['name' => $request->name],
+        ]);
+
+        $this->notifyNewContent('new_package', $package->name, [
+            'package_id' => $package->id,
+            'slug' => $package->slug
+        ]);
 
         return redirect()->route('admin.packages.index')->with('success', 'Package created successfully.');
     }
@@ -109,6 +126,19 @@ class PackageController extends Controller
             ->where('status', 'active')
             ->with(['destination', 'reviews.user'])
             ->firstOrFail();
+
+        if (auth()->check()) {
+            RecentlyViewedItem::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'viewable_type' => TourPackage::class,
+                    'viewable_id' => $package->id,
+                ],
+                [
+                    'viewed_at' => now(),
+                ]
+            );
+        }
         
         $relatedPackages = TourPackage::where('destination_id', $package->destination_id)
             ->where('id', '!=', $package->id)
@@ -154,11 +184,27 @@ class PackageController extends Controller
 
         $package->update($data);
 
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'package_updated',
+            'subject_type' => TourPackage::class,
+            'subject_id' => $package->id,
+            'meta' => ['name' => $package->name],
+        ]);
+
         return redirect()->route('admin.packages.index')->with('success', 'Package updated successfully.');
     }
 
     public function destroy(TourPackage $package)
     {
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'package_deleted',
+            'subject_type' => TourPackage::class,
+            'subject_id' => $package->id,
+            'meta' => ['name' => $package->name],
+        ]);
+
         $package->delete();
         return redirect()->route('admin.packages.index')->with('success', 'Package deleted successfully.');
     }

@@ -11,7 +11,9 @@ use App\Models\Hotel;
 use App\Models\Review;
 use App\Models\Blog;
 use App\Models\Offer;
+use App\Models\AdminActivityLog;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -66,8 +68,42 @@ class AdminController extends Controller
 
         $recentBookings = Booking::with(['user', 'bookable'])->latest()->take(6)->get();
         $recentUsers = User::where('role', 'user')->latest()->take(5)->get();
+        $recentActivities = AdminActivityLog::with('admin')->latest()->take(8)->get();
 
-        return view('admin.dashboard', compact('stats', 'recentBookings', 'chartData', 'recentUsers'));
+        $topDestinations = Booking::select('bookable_id', 'bookable_type', DB::raw('count(*) as total'))
+            ->where('bookable_type', Destination::class)
+            ->groupBy('bookable_id', 'bookable_type')
+            ->orderByDesc('total')
+            ->with('bookable')
+            ->take(5)
+            ->get();
+
+        $topPackages = Booking::select('bookable_id', 'bookable_type', DB::raw('count(*) as total'))
+            ->where('bookable_type', TourPackage::class)
+            ->groupBy('bookable_id', 'bookable_type')
+            ->orderByDesc('total')
+            ->with('bookable')
+            ->take(5)
+            ->get();
+
+        $topHotels = Booking::select('bookable_id', 'bookable_type', DB::raw('count(*) as total'))
+            ->where('bookable_type', Hotel::class)
+            ->groupBy('bookable_id', 'bookable_type')
+            ->orderByDesc('total')
+            ->with('bookable')
+            ->take(5)
+            ->get();
+
+        return view('admin.dashboard', compact(
+            'stats',
+            'recentBookings',
+            'chartData',
+            'recentUsers',
+            'recentActivities',
+            'topDestinations',
+            'topPackages',
+            'topHotels'
+        ));
     }
 
     public function bookings(Request $request)
@@ -156,11 +192,39 @@ class AdminController extends Controller
             'discount_value' => 'required|numeric|min:0',
             'valid_from' => 'required|date',
             'valid_until' => 'required|date|after:valid_from',
+            'banner_text' => 'nullable|string|max:255',
+            'highlight_text' => 'nullable|string|max:255',
+            'countdown_ends_at' => 'nullable|date',
         ]);
 
-        Offer::create(array_merge($request->all(), [
+        $offer = Offer::create(array_merge($request->all(), [
             'slug' => Str::slug($request->title),
         ]));
+
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'offer_created',
+            'subject_type' => Offer::class,
+            'subject_id' => $offer->id,
+            'meta' => ['title' => $request->title],
+        ]);
+
+        $users = User::where('role', 'user')->get();
+        foreach ($users as $user) {
+            \App\Models\Notification::create([
+                'id' => (string) Str::uuid(),
+                'type' => 'offer_announced',
+                'notifiable_type' => get_class($user),
+                'notifiable_id' => $user->id,
+                'data' => [
+                    'offer_id' => $offer->id,
+                    'title' => $offer->title,
+                    'code' => $offer->code,
+                ],
+            ]);
+
+            Mail::to($user->email)->send(new \App\Mail\OfferAnnouncementMail($offer));
+        }
 
         return redirect()->route('admin.offers.index')->with('success', 'Offer created successfully.');
     }
@@ -176,17 +240,35 @@ class AdminController extends Controller
             'title' => 'required|string|max:255',
             'discount_type' => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
+            'banner_text' => 'nullable|string|max:255',
+            'highlight_text' => 'nullable|string|max:255',
+            'countdown_ends_at' => 'nullable|date',
         ]);
 
         $offer->update(array_merge($request->all(), [
             'slug' => Str::slug($request->title),
         ]));
 
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'offer_updated',
+            'subject_type' => Offer::class,
+            'subject_id' => $offer->id,
+            'meta' => ['title' => $offer->title],
+        ]);
+
         return redirect()->route('admin.offers.index')->with('success', 'Offer updated successfully.');
     }
 
     public function destroyOffer(Offer $offer)
     {
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'offer_deleted',
+            'subject_type' => Offer::class,
+            'subject_id' => $offer->id,
+            'meta' => ['title' => $offer->title],
+        ]);
         $offer->delete();
         return redirect()->route('admin.offers.index')->with('success', 'Offer deleted successfully.');
     }

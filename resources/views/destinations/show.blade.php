@@ -48,6 +48,29 @@
                     </div>
                 </section>
 
+                <!-- Weather Widget -->
+                <section data-aos="fade-up" class="glass p-10 rounded-[3rem] border-white/5">
+                    <h3 class="text-xl font-black text-white uppercase tracking-tighter mb-6">Live <span class="text-emerald-500 italic">Weather</span></h3>
+                    <div id="weatherWidget" class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                        <div class="glass p-6 rounded-2xl border-white/5">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Temp</p>
+                            <p class="text-2xl font-black text-white" id="weatherTemp">--</p>
+                        </div>
+                        <div class="glass p-6 rounded-2xl border-white/5">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Condition</p>
+                            <p class="text-sm font-black text-white" id="weatherCondition">--</p>
+                        </div>
+                        <div class="glass p-6 rounded-2xl border-white/5">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Humidity</p>
+                            <p class="text-sm font-black text-white" id="weatherHumidity">--</p>
+                        </div>
+                        <div class="glass p-6 rounded-2xl border-white/5">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Feels Like</p>
+                            <p class="text-sm font-black text-white" id="weatherFeels">--</p>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Image Gallery -->
                 @if($destination->images)
                 <section data-aos="fade-up" class="pt-8">
@@ -180,11 +203,17 @@
                                 </div>
                             </div>
 
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Coupon Code</label>
+                                <input type="text" name="coupon_code" class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-blue-600 transition-all font-bold" placeholder="GOA10">
+                            </div>
+
                             @auth
                             <button type="submit" class="btn-luxury w-full py-5 text-sm flex items-center justify-center space-x-3">
                                 <span>Reserve Gateway</span>
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </button>
+                            <button onclick="toggleWishlist('Destination', {{ $destination->id }}, this)" type="button" class="btn-luxury w-full py-4 text-[10px] !bg-white/5 hover:!bg-rose-600 mt-4">Add to Favorites</button>
                             @else
                             <a href="{{ route('login') }}" class="btn-luxury w-full py-5 text-sm flex items-center justify-center space-x-3">
                                 <span>Login to Reserve</span>
@@ -193,6 +222,7 @@
                             @endauth
                         </form>
                     </div>
+
 
                     <!-- Nearby Hub -->
                     <div class="glass p-10 rounded-[3rem] border-white/5">
@@ -229,4 +259,39 @@
             });
         });
     </script>
+
+    <script>
+        fetch("{{ route('weather.show') }}?city={{ urlencode($destination->location ?? 'India') }}")
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.main) {
+                    document.getElementById('weatherTemp').textContent = `${Math.round(data.main.temp)}°C`;
+                    document.getElementById('weatherCondition').textContent = data.weather?.[0]?.main || 'Clear';
+                    document.getElementById('weatherHumidity').textContent = `${data.main.humidity}%`;
+                    document.getElementById('weatherFeels').textContent = `${Math.round(data.main.feels_like)}°C`;
+                }
+            })
+            .catch(() => {});
+    </script>
+
+    @auth
+    <script>
+        function toggleWishlist(type, id, btn) {
+            fetch("{{ route('wishlist.toggle') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ wishable_type: type, wishable_id: id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (btn) {
+                    btn.textContent = data.status === 'added' ? 'Remove from Favorites' : 'Add to Favorites';
+                }
+            });
+        }
+    </script>
+    @endauth
 </x-app-layout>

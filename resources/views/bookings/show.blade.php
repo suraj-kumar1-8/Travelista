@@ -44,6 +44,14 @@
                         <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2">Total Amount</p>
                         <p class="text-3xl font-black text-white">₹{{ number_format($booking->total_price) }}</p>
                     </div>
+                    <div class="glass p-8 rounded-[2rem] border-white/5">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Discount</p>
+                        <p class="text-xl font-black text-white">₹{{ number_format($booking->discount_amount ?? 0) }}</p>
+                    </div>
+                    <div class="glass p-8 rounded-[2rem] border-white/5">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tax (GST)</p>
+                        <p class="text-xl font-black text-white">₹{{ number_format($booking->tax_amount ?? 0) }}</p>
+                    </div>
                 </div>
 
                 @if($booking->bookable)
@@ -59,6 +67,55 @@
                     </div>
                 </div>
                 @endif
+
+                <!-- Booking Timeline -->
+                <div class="glass p-12 rounded-[2rem] border-white/5 mt-12">
+                    <h3 class="text-2xl font-black text-white uppercase tracking-tighter mb-6">Booking <span class="text-blue-600 italic">Timeline</span></h3>
+                    <div class="space-y-6">
+                        @forelse($booking->statusHistories as $history)
+                        <div class="flex items-start space-x-4">
+                            <div class="w-3 h-3 bg-blue-600 rounded-full mt-2"></div>
+                            <div>
+                                <p class="text-xs font-black text-white uppercase tracking-widest">{{ str_replace('_', ' ', $history->status) }}</p>
+                                <p class="text-[10px] text-slate-500">{{ $history->created_at->format('M d, Y h:i A') }}</p>
+                                @if($history->note)
+                                    <p class="text-xs text-slate-400 mt-2">{{ $history->note }}</p>
+                                @endif
+                            </div>
+                        </div>
+                        @empty
+                        <p class="text-slate-500 text-sm">Timeline updates will appear here.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Itinerary -->
+                <div class="glass p-12 rounded-[2rem] border-white/5 mt-12">
+                    <h3 class="text-2xl font-black text-white uppercase tracking-tighter mb-6">Travel <span class="text-emerald-500 italic">Itinerary</span></h3>
+                    <div class="space-y-6">
+                        @forelse($booking->itineraries as $itinerary)
+                        <div class="glass p-6 rounded-2xl border-white/5">
+                            <div class="flex items-center justify-between">
+                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Day {{ $itinerary->day_number }}</p>
+                                <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Planned</span>
+                            </div>
+                            <h4 class="text-lg font-black text-white uppercase tracking-tighter mt-2">{{ $itinerary->title }}</h4>
+                            @if($itinerary->description)
+                                <p class="text-xs text-slate-400 mt-2">{{ $itinerary->description }}</p>
+                            @endif
+                            @if(is_array($itinerary->items))
+                                <div class="flex flex-wrap gap-2 mt-4">
+                                    @foreach($itinerary->items as $item)
+                                        <span class="px-3 py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-white/5 rounded-full border border-white/5">{{ $item }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                        @empty
+                        <p class="text-slate-500 text-sm">Your itinerary will appear once the booking is confirmed.</p>
+                        @endforelse
+                    </div>
+                </div>
 
                 <!-- Payment Section -->
                 @if($booking->status === 'pending')
@@ -153,6 +210,25 @@
                     <a href="{{ route('bookings.index') }}" class="btn-luxury flex-1 py-5 text-center !bg-white/5 hover:!bg-emerald-600">All Bookings</a>
                     <a href="{{ route('home') }}" class="btn-luxury flex-1 py-5 text-center">Continue Exploring</a>
                 </div>
+
+                @if(in_array($booking->status, ['pending', 'confirmed']) && !$booking->cancellation_status)
+                <div class="glass p-10 rounded-[2rem] border-white/5 mt-12">
+                    <h3 class="text-xl font-black text-white uppercase tracking-tighter mb-4">Cancellation <span class="text-rose-500 italic">Request</span></h3>
+                    <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="space-y-4">
+                        @csrf
+                        <textarea name="cancellation_reason" required class="w-full bg-white/5 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-rose-600 transition-all" rows="3" placeholder="Tell us why you need to cancel..."></textarea>
+                        <button type="submit" class="btn-luxury w-full py-4 !bg-rose-600 hover:!bg-rose-500">Request Cancellation</button>
+                    </form>
+                </div>
+                @elseif($booking->cancellation_status)
+                <div class="glass p-8 rounded-[2rem] border-white/5 mt-12">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Cancellation Status</p>
+                    <p class="text-lg font-black text-white uppercase tracking-tighter">{{ str_replace('_', ' ', $booking->cancellation_status) }}</p>
+                    @if($booking->refund_status)
+                        <p class="text-xs text-slate-400 mt-2">Refund: {{ $booking->refund_status }} @if($booking->refund_amount) (₹{{ number_format($booking->refund_amount) }}) @endif</p>
+                    @endif
+                </div>
+                @endif
             </div>
         </div>
     </section>

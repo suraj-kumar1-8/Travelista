@@ -96,6 +96,28 @@
         </div>
     </section>
 
+    <!-- Trending Destinations -->
+    <section class="py-28 bg-slate-950">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-end justify-between mb-12" data-aos="fade-up">
+                <div>
+                    <span class="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] mb-4 block">Trending Now</span>
+                    <h2 class="text-4xl font-black text-white uppercase tracking-tighter">Most <span class="text-emerald-500 italic">Booked</span></h2>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                @foreach($trendingDestinations as $trend)
+                    @if($trend->bookable)
+                    <a href="{{ route('destinations.show', $trend->bookable->slug) }}" class="glass p-8 rounded-[3rem] border-white/5 hover:border-emerald-600/30 transition-all">
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tighter">{{ $trend->bookable->name }}</h3>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-widest">Bookings: {{ $trend->total }}</p>
+                    </a>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    </section>
+
     <!-- Featured Gateways (Destinations) -->
     <section class="py-32 bg-slate-950">
         <div class="max-w-7xl mx-auto px-4">
@@ -299,4 +321,7 @@
             </div>
         </div>
     </section>
+
+    <script>
+    </script>
 </x-app-layout>

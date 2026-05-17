@@ -47,6 +47,23 @@
                         <span x-show="sidebarOpen">Wishlist</span>
                     </a>
 
+                    <a href="{{ route('notifications.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('notifications.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors' }} group">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0h6z"></path></svg>
+                        <span x-show="sidebarOpen">Notifications</span>
+                    </a>
+
+                    <a href="{{ route('support.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('support.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors' }} group">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 10c0 3.866-3.582 7-8 7a8.969 8.969 0 01-4.906-1.438L2 17l1.437-3.094A7.967 7.967 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7z"></path></svg>
+                        <span x-show="sidebarOpen">Support</span>
+                    </a>
+
+                    <a href="{{ route('travel-photos.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('travel-photos.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors' }} group">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h4l2-2h6l2 2h4v12H3V7z"></path></svg>
+                        <span x-show="sidebarOpen">Travel Photos</span>
+                    </a>
+
+
+
                     @if(Auth::user()->role === 'admin')
                     <div class="pt-6 pb-2 px-4" x-show="sidebarOpen">
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Admin</span>
@@ -79,6 +96,27 @@
                     </div>
 
                     <div class="flex items-center space-x-6">
+                        @php
+                            $unreadCount = auth()->user()->notifications()->unread()->count();
+                        @endphp
+                        <a href="{{ route('notifications.index') }}" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <svg class="w-6 h-6 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0h6z"></path></svg>
+                            @if($unreadCount > 0)
+                                <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full">{{ $unreadCount }}</span>
+                            @endif
+                        </a>
+
+                        <div class="hidden md:flex items-center space-x-3 px-4 py-2 bg-white/5 dark:bg-white/10 rounded-2xl">
+                            <div class="text-right">
+                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Wallet</p>
+                                <p class="text-sm font-bold text-slate-800 dark:text-white">₹{{ number_format(auth()->user()->wallet_balance ?? 0) }}</p>
+                            </div>
+                            <div class="w-px h-8 bg-slate-200 dark:bg-slate-800"></div>
+                            <div class="text-right">
+                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Rewards</p>
+                                <p class="text-sm font-bold text-slate-800 dark:text-white">{{ number_format(auth()->user()->reward_points ?? 0) }} pts</p>
+                            </div>
+                        </div>
                         <!-- Dark Mode Toggle -->
                         <button @click="darkMode = !darkMode; localStorage.theme = darkMode ? 'dark' : 'light'; document.documentElement.classList.toggle('dark')" 
                                 class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" x-data="{ darkMode: document.documentElement.classList.contains('dark') }">

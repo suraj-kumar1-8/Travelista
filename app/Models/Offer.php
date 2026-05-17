@@ -10,14 +10,15 @@ class Offer extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'slug', 'description', 'image_url', 'code',
+        'title', 'slug', 'description', 'image_url', 'code', 'banner_text', 'highlight_text',
         'discount_type', 'discount_value', 'min_booking_amount',
-        'valid_from', 'valid_until', 'is_active', 'max_uses', 'times_used'
+        'valid_from', 'valid_until', 'countdown_ends_at', 'is_active', 'max_uses', 'times_used'
     ];
 
     protected $casts = [
         'valid_from' => 'date',
         'valid_until' => 'date',
+        'countdown_ends_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 

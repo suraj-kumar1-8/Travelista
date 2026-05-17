@@ -13,7 +13,8 @@ class Hotel extends Model
 
     protected $fillable = [
         'name', 'slug', 'destination_id', 'description', 'location',
-        'rating', 'image_url', 'images', 'status', 'amenities', 'price_per_night', 'type', 'category'
+        'rating', 'image_url', 'images', 'status', 'amenities', 'price_per_night', 'type', 'category',
+        'total_rooms', 'available_rooms'
     ];
 
     protected $casts = [
@@ -55,6 +56,11 @@ class Hotel extends Model
     public function bookings()
     {
         return $this->morphMany(Booking::class, 'bookable');
+    }
+
+    public function roomCategories()
+    {
+        return $this->hasMany(HotelRoomCategory::class);
     }
 
     /**

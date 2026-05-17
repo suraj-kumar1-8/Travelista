@@ -1,5 +1,5 @@
 @foreach($packages as $package)
-<div class="glass group rounded-[4rem] overflow-hidden border-white/5 transition-all duration-700 hover:border-emerald-600/30 flex flex-col md:flex-row h-full md:h-[450px]" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+<a href="{{ route('packages.show', $package->slug) }}" class="block glass group rounded-[4rem] overflow-hidden border-white/5 transition-all duration-700 hover:border-emerald-600/30 flex flex-col md:flex-row h-full md:h-[450px]" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
     <div class="w-full md:w-2/5 relative overflow-hidden">
         <img src="{{ $package->image_url }}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="{{ $package->name }}" onerror="this.src='https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=1000'">
         <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-transparent to-transparent hidden md:block"></div>
@@ -21,8 +21,8 @@
                 <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Total Investment</p>
                 <p class="text-4xl font-black text-white tracking-tighter">₹{{ number_format($package->price) }} <span class="text-xs text-slate-500 uppercase tracking-widest">/ pp</span></p>
             </div>
-            <a href="{{ route('packages.show', $package->slug) }}" class="btn-luxury px-10 py-5 !bg-white/5 border-white/10 hover:!bg-emerald-600 shadow-none hover:shadow-emerald-600/20">Reserve Now</a>
+            <span class="btn-luxury px-10 py-5 !bg-white/5 border-white/10 group-hover:!bg-emerald-600 shadow-none group-hover:shadow-emerald-600/20 inline-block text-center cursor-pointer">Reserve Now</span>
         </div>
     </div>
-</div>
+</a>
 @endforeach

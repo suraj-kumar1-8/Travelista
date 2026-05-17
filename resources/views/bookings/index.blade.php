@@ -45,7 +45,7 @@
                             </div>
                             <div>
                                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Status</p>
-                                <span class="inline-flex px-3 py-1 {{ $booking->status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20' }} text-[10px] font-black rounded-full uppercase tracking-widest border">{{ $booking->status }}</span>
+                                <span class="inline-flex px-3 py-1 {{ $booking->status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : ($booking->status === 'cancelled' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : ($booking->status === 'completed' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20')) }} text-[10px] font-black rounded-full uppercase tracking-widest border">{{ $booking->status }}</span>
                             </div>
                             <div>
                                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Type</p>
@@ -59,7 +59,13 @@
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 Invoice
                             </a>
-                            <button class="px-8 py-3 bg-rose-600/10 text-rose-500 hover:bg-rose-600 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-rose-500/20 ml-auto">Cancel Adventure</button>
+                            @if(in_array($booking->status, ['pending', 'confirmed']) && !$booking->cancellation_status)
+                            <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="ml-auto">
+                                @csrf
+                                <input type="hidden" name="cancellation_reason" value="User requested cancellation">
+                                <button type="submit" class="px-8 py-3 bg-rose-600/10 text-rose-500 hover:bg-rose-600 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-rose-500/20">Cancel Adventure</button>
+                            </form>
+                            @endif
                         </div>
                     </div>
                 </div>

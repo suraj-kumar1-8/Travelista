@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Destination;
+use App\Models\AdminActivityLog;
+use App\Models\RecentlyViewedItem;
+use App\Traits\NotifiesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class DestinationController extends Controller
 {
+    use NotifiesUsers;
     public function index(Request $request)
     {
         if ($request->is('admin/*')) {
@@ -72,7 +76,20 @@ class DestinationController extends Controller
             }
         }
 
-        Destination::create($data);
+        $destination = Destination::create($data);
+
+            AdminActivityLog::create([
+                'admin_id' => auth()->id(),
+                'action' => 'destination_created',
+                'subject_type' => Destination::class,
+                'subject_id' => $destination->id,
+                'meta' => ['name' => $request->name],
+            ]);
+
+        $this->notifyNewContent('new_destination', $destination->name, [
+            'destination_id' => $destination->id,
+            'slug' => $destination->slug
+        ]);
 
         return redirect()->route('admin.destinations.index')->with('success', 'Destination created successfully.');
     }
@@ -83,6 +100,19 @@ class DestinationController extends Controller
             ->where('status', 'active')
             ->with(['hotels', 'tourPackages', 'reviews.user'])
             ->firstOrFail();
+
+        if (auth()->check()) {
+            RecentlyViewedItem::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'viewable_type' => Destination::class,
+                    'viewable_id' => $destination->id,
+                ],
+                [
+                    'viewed_at' => now(),
+                ]
+            );
+        }
         
         $relatedDestinations = Destination::where('id', '!=', $destination->id)->take(3)->get();
         
@@ -123,11 +153,27 @@ class DestinationController extends Controller
 
         $destination->update($data);
 
+            AdminActivityLog::create([
+                'admin_id' => auth()->id(),
+                'action' => 'destination_updated',
+                'subject_type' => Destination::class,
+                'subject_id' => $destination->id,
+                'meta' => ['name' => $destination->name],
+            ]);
+
         return redirect()->route('admin.destinations.index')->with('success', 'Destination updated successfully.');
     }
 
     public function destroy(Destination $destination)
     {
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'destination_deleted',
+            'subject_type' => Destination::class,
+            'subject_id' => $destination->id,
+            'meta' => ['name' => $destination->name],
+        ]);
+
         $destination->delete();
         return redirect()->route('admin.destinations.index')->with('success', 'Destination deleted successfully.');
     }

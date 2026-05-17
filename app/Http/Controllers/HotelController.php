@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Hotel;
 use App\Models\Destination;
+use App\Models\AdminActivityLog;
+use App\Models\RecentlyViewedItem;
+use App\Models\HotelRoomCategory;
+use App\Traits\NotifiesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class HotelController extends Controller
 {
+    use NotifiesUsers;
     public function index(Request $request)
     {
         if ($request->is('admin/*')) {
@@ -93,6 +98,13 @@ class HotelController extends Controller
         $data = $request->except('upload_images');
         $data['slug'] = Str::slug($request->name);
 
+        if (empty($data['total_rooms'])) {
+            $data['total_rooms'] = 50;
+        }
+        if (empty($data['available_rooms'])) {
+            $data['available_rooms'] = $data['total_rooms'];
+        }
+
         if ($request->hasFile('upload_images')) {
             $images = [];
             foreach ($request->file('upload_images') as $image) {
@@ -106,7 +118,39 @@ class HotelController extends Controller
             }
         }
 
-        Hotel::create($data);
+        $hotel = Hotel::create($data);
+
+        if ($hotel->roomCategories()->count() === 0) {
+            $defaults = [
+                ['name' => 'Deluxe Room', 'multiplier' => 1],
+                ['name' => 'Premium Suite', 'multiplier' => 1.4],
+                ['name' => 'Family Room', 'multiplier' => 1.2],
+                ['name' => 'Luxury Villa', 'multiplier' => 2],
+            ];
+
+            foreach ($defaults as $default) {
+                HotelRoomCategory::create([
+                    'hotel_id' => $hotel->id,
+                    'name' => $default['name'],
+                    'price_per_night' => $hotel->price_per_night * $default['multiplier'],
+                    'rooms_total' => 10,
+                    'rooms_available' => 10,
+                ]);
+            }
+        }
+
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'hotel_created',
+            'subject_type' => Hotel::class,
+            'subject_id' => $hotel->id,
+            'meta' => ['name' => $request->name],
+        ]);
+
+        $this->notifyNewContent('new_hotel', $hotel->name, [
+            'hotel_id' => $hotel->id,
+            'slug' => $hotel->slug
+        ]);
 
         return redirect()->route('admin.hotels.index')->with('success', 'Hotel created successfully.');
     }
@@ -115,8 +159,21 @@ class HotelController extends Controller
     {
         $hotel = Hotel::where('slug', $slug)
             ->where('status', 'active')
-            ->with(['destination', 'reviews.user'])
+            ->with(['destination', 'reviews.user', 'roomCategories'])
             ->firstOrFail();
+
+        if (auth()->check()) {
+            RecentlyViewedItem::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'viewable_type' => Hotel::class,
+                    'viewable_id' => $hotel->id,
+                ],
+                [
+                    'viewed_at' => now(),
+                ]
+            );
+        }
         
         $relatedHotels = Hotel::where('destination_id', $hotel->destination_id)
             ->where('id', '!=', $hotel->id)
@@ -162,11 +219,27 @@ class HotelController extends Controller
 
         $hotel->update($data);
 
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'hotel_updated',
+            'subject_type' => Hotel::class,
+            'subject_id' => $hotel->id,
+            'meta' => ['name' => $hotel->name],
+        ]);
+
         return redirect()->route('admin.hotels.index')->with('success', 'Hotel updated successfully.');
     }
 
     public function destroy(Hotel $hotel)
     {
+        AdminActivityLog::create([
+            'admin_id' => auth()->id(),
+            'action' => 'hotel_deleted',
+            'subject_type' => Hotel::class,
+            'subject_id' => $hotel->id,
+            'meta' => ['name' => $hotel->name],
+        ]);
+
         $hotel->delete();
         return redirect()->route('admin.hotels.index')->with('success', 'Hotel deleted successfully.');
     }
